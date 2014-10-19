@@ -1,0 +1,127 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+		 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+		 xsi:schemaLocation="http://maven.apache.org/POM/4.0.0
+							 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>yaml-cpp</groupId>
+	<artifactId>yaml-cpp</artifactId>
+	<packaging>nar</packaging>
+	<version>0.5.1-SNAPSHOT</version>
+
+	<properties>
+		<boost.groupId>boost</boost.groupId>
+		<boost.artifactId>boost</boost.artifactId>
+		<boost.version>1.56.0</boost.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>${boost.groupId}</groupId>
+			<artifactId>${boost.artifactId}</artifactId>
+			<type>nar</type>
+			<version>${boost.version}</version>
+		</dependency>
+	</dependencies>
+
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>com.googlecode.cmake-maven-project</groupId>
+				<artifactId>cmake-maven-plugin</artifactId>
+				<version>2.8.11-b4</version>
+				<executions>
+					<execution>
+						<id>cmake-generate</id>
+						<goals>
+							<goal>generate</goal>
+						</goals>
+						<configuration>
+							<sourcePath>
+								<!-- The directory containing CMakeLists -->
+								${project.basedir}
+							</sourcePath>
+							<targetPath>
+								<!-- The directory write the project files to -->
+								${project.build.directory}/build
+							</targetPath>
+							<generator>
+								<!-- One of the generators defined at http://www.cmake.org/cmake/help/v2.8.10/cmake.html#section_Generators -->
+								Unix Makefiles
+							</generator>
+							<environmentVariables>
+								<key>value</key>
+							</environmentVariables>
+							<options>
+								<option>
+									-DBOOST_INCLUDEDIR=${project.build.directory}/nar/${boost.artifactId}-${boost.version}-noarch/include
+								</option> 
+							</options>
+						</configuration>
+					</execution>
+					<execution>
+						<id>cmake-compile</id>
+						<goals>
+							<goal>compile</goal>
+						</goals>
+						<configuration>
+							<projectDirectory>${project.build.directory}/build</projectDirectory>
+						</configuration>
+					</execution>
+					<execution>
+						<id>cmake-test</id>
+						<goals>
+							<goal>test</goal>
+						</goals>
+						<configuration>
+							<!-- "buildDirectory" is "targetPath" from the "generate" goal --> 
+							<buildDirectory>${project.build.directory}/build</buildDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.github.maven-nar</groupId>
+				<artifactId>nar-maven-plugin</artifactId>
+				<version>3.2.0</version>
+				<extensions>true</extensions>
+				<configuration>
+					<libraries>
+						<library>
+							<type>static</type>
+						</library>
+					</libraries>
+					<cpp>
+						<!-- Built by cmake-maven-plugin -->
+						<sourceDirectory>${project.build.directory}/build/CMakeFiles/${project.name}.dir/src</sourceDirectory>
+						<includes>
+							<include>**/*.o</include>
+						</includes>
+						<includePaths>
+							<includePath>
+								<path>${project.basedir}/include</path>
+							</includePath>
+						</includePaths>
+						<options>
+							<option>--std=c++0x</option>
+							<option>-g</option>
+						</options>
+					</cpp>
+				</configuration>
+				<!-- Run the nar-compile goal again so that we package up the objects built by cmake as part of the nar package -->
+				<executions>
+					<execution>
+						<id>nar-compile</id>
+						<goals>
+							<goal>nar-compile</goal>
+						</goals>
+						<configuration>
+							<projectDirectory>${project.build.directory}/build</projectDirectory>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>
